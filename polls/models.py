@@ -25,7 +25,7 @@ class Dualshock(models.Model):
     connection_type = models.CharField(max_length=30)
     compatibility = models.CharField(max_length=60)
     weight = models.FloatField()
-    colour = models.CharField(max_length=30)
+    # colour = models.CharField(max_length=30)
     action_radius = models.FloatField()
     battery_power = models.FloatField()
 
@@ -35,7 +35,7 @@ class PSVR(models.Model):
     country = models.CharField(max_length=30)
     type_display = models.CharField(max_length=30)
     diagonal = models.FloatField()
-    permission = models.FloatField()
+    permission = models.CharField(max_length=11)
     viewing_angle = models.FloatField()
 
 
@@ -70,7 +70,7 @@ class Prototype(models.Model):
     prototype_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30)
     date = models.DateField()
-    consumption = models.FloatField()
+    # consumption = models.FloatField()
     ssd_type = models.CharField(max_length=30)
     type_storage_device = models.CharField(max_length=30)
     specifications = models.CharField(max_length=200)
@@ -107,7 +107,8 @@ class Investor(models.Model):
 class Feedback(models.Model):
     feedback_id = models.AutoField(primary_key=True)
     evaluation = models.SmallIntegerField()
-    path_comment = models.CharField(max_length=50)
+    comment = models.CharField(default="", max_length=200)
+    # path_comment = models.CharField(max_length=50)
 
 
 class TargetAudience(models.Model):
@@ -168,7 +169,7 @@ class Plant(models.Model):
 class StorageRoom(models.Model):
     storage_room_id = models.AutoField(primary_key=True)
     location = models.CharField(max_length=100)
-    capacity = models.CharField(max_length=200)
+    capacity = models.FloatField()
 
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE)
 
