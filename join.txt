@@ -1,0 +1,138 @@
+CREATE VIEW join_full_kit AS
+    SELECT kit_id, kit_name, date_kit, design_name, style, colour, console_name, dualshock_id, psvr_id, contacts, avg_evaluation, polls_plant.plant_id, location, specifications
+    FROM polls_plant
+    JOIN (SELECT kit_id, kit_name, kit_feed_des.date AS date_kit, design_name, style, colour, polls_console.name AS console_name, dualshock_id, psvr_id, contacts, avg_evaluation, plant_id
+        FROM polls_console
+        JOIN (SELECT kit_id, kit_feed.name AS kit_name, date, polls_design.name AS design_name, style, colour, console_id, dualshock_id, psvr_id, plant_id, contacts, avg_evaluation
+            FROM polls_design
+            JOIN (SELECT kit_id, name, date, console_id, design_id, dualshock_id, plant_id, psvr_id, contacts, avg_evaluation
+                FROM polls_kit
+                JOIN (SELECT  avg_evaluation, feedprm_pr.advertising_department_id, contacts
+                    FROM polls_advertisingdepartment
+                    JOIN (SELECT round(AVG(evaluation)::DECIMAL, 1) AS avg_evaluation, advertising_department_id
+                        FROM polls_prmanager
+                        JOIN (SELECT evaluation, prmanager_id
+                            FROM polls_feedback
+                            JOIN polls_prmanager_feedbacks
+                            ON polls_feedback.feedback_id = polls_prmanager_feedbacks.feedback_id) AS feedprm
+                        ON polls_prmanager.pr_manager_id = feedprm.prmanager_id
+                        GROUP BY advertising_department_id) AS feedprm_pr
+                    ON polls_advertisingdepartment.advertising_department_id = feedprm_pr.advertising_department_id) AS feedprm_pr_adv
+                ON polls_kit.advertising_department_id = feedprm_pr_adv.advertising_department_id) AS kit_feed
+            ON polls_design.design_id = kit_feed.design_id) AS kit_feed_des
+        ON polls_console.console_id = kit_feed_des.console_id) AS kit_feed_des_con
+    ON polls_plant.plant_id = kit_feed_des_con.plant_id;
+
+CREATE VIEW join_plant AS
+    SELECT plant_id, plant_name, plant_location, specifications, storage_room_location, capacity, component_name, component_description, equipment_name, equipment_description, polls_employee.name AS employee_name, role, email, phone
+    FROM polls_employee
+    JOIN (SELECT plant_id, plant_name, plant_location, specifications, storage_room_location, capacity, component_name, component_description, equipment_name, equipment_description, employee_id
+        FROM polls_employee_equipments
+        JOIN (SELECT plant_sr_comp.plant_id, plant_name, plant_location, specifications, storage_room_location, capacity, component_name, plant_sr_comp.description AS component_description, polls_equipment.name AS equipment_name, polls_equipment.description AS equipment_description, equipment_id
+            FROM polls_equipment
+            JOIN (SELECT plant_id, plant_sr.name AS plant_name, plant_location, specifications, storage_room_location, capacity, polls_component.name AS component_name, description
+                FROM polls_component
+                JOIN (SELECT polls_plant.plant_id, name, polls_plant.location AS plant_location, specifications, polls_storageroom.location AS storage_room_location, capacity, polls_storageroom.storage_room_id
+                    FROM polls_plant
+                    JOIN polls_storageroom
+                    ON polls_plant.plant_id = polls_storageroom.plant_id) AS plant_sr
+                ON polls_component.storage_room_id = plant_sr.storage_room_id) AS plant_sr_comp
+            ON polls_equipment.plant_id = plant_sr_comp.plant_id) AS plant_eq
+        ON polls_employee_equipments.equipment_id = plant_eq.equipment_id) AS plant_eq_em
+    ON polls_employee.employee_id = plant_eq_em.employee_id;
+	
+CREATE VIEW join_con_prot_ff AS
+    SELECT polls_console.name AS console_name, polls_console.date AS console_date, rom, ram, polls_console.weight AS console_weight, prototype_name, ff_prot.date AS prototype_date, type_storage_device, ssd_type, specifications, form, form_factor_name, height, depth, width
+    FROM polls_console
+    JOIN (SELECT polls_prototype.name AS prototype_name, date, type_storage_device, ssd_type, specifications, form, ff.name AS form_factor_name, height, weight, depth, width, polls_prototype.prototype_id
+        FROM polls_prototype
+        JOIN (SELECT form, name, height, weight, depth, width, prototype_id
+            FROM polls_formfactor
+            JOIN polls_prototype_form_factors
+            ON polls_formfactor.form_factor_id = polls_prototype_form_factors.formfactor_id) AS ff
+        ON polls_prototype.prototype_id = ff.prototype_id) AS ff_prot
+    ON polls_console.prototype_id = ff_prot.prototype_id;
+
+CREATE VIEW join_equipment AS
+    SELECT
+        polls_equipment.plant_id,
+        round(AVG(temperature)::DECIMAL, 2) AS avg_temperature,
+        round(AVG(wear_level)::DECIMAL, 2) AS avg_wear_level,
+        round(AVG(noise_level)::DECIMAL, 2) AS avg_noise_level,
+        round(AVG(errors_number)::DECIMAL, 2) AS avg_errors_number
+    FROM polls_equipment
+    JOIN polls_equipmentcondition
+    ON polls_equipment.equipment_id = polls_equipmentcondition.equipment_id
+    GROUP BY plant_id
+    ORDER BY plant_id;
+
+CREATE VIEW join_supplier_compon AS
+	SELECT sup.name AS supplier_name, email, phone, polls_component.name AS component_name, description
+	FROM polls_component
+	JOIN	(SELECT polls_supplier.supplier_id, name, email, phone, polls_supplier_components.component_id
+		 FROM polls_supplier
+		 JOIN polls_supplier_components
+		 ON polls_supplier.supplier_id = polls_supplier_components.supplier_id) AS sup
+	ON polls_component.component_id = sup.component_id
+	ORDER BY supplier_name ASC, component_name ASC;
+
+CREATE VIEW join_developer_soft AS
+	SELECT name AS developer_name, email, phone, role, type, version, status
+	FROM polls_software
+	JOIN	(SELECT polls_developer.developer_id, name, email, phone, role, polls_software_developers.software_id
+		 FROM polls_developer
+		 JOIN polls_software_developers
+		 ON polls_developer.developer_id = polls_software_developers.developer_id) AS dev
+	ON polls_software.software_id = dev.software_id 
+	ORDER BY status DESC, developer_name ASC;
+
+CREATE VIEW join_designer_des AS
+	SELECT des.name AS designer_name, email, phone, role, polls_design.name AS design_name, colour, style, status
+	FROM polls_design
+	JOIN	(SELECT polls_designer.designer_id, name, email, phone, role, polls_design_designers.design_id AS design_id
+		 FROM polls_designer
+		 JOIN polls_design_designers
+		 ON polls_designer.designer_id = polls_design_designers.designer_id) AS des
+	ON polls_design.design_id = des.design_id
+	ORDER BY status DESC, designer_name ASC;
+
+
+
+
+
+
+
+CREATE VIEW console_prot_form AS
+	ORDER BY console.date
+
+CREATE VIEW soft_prot AS
+	ORDER BY soft.status
+
+CREATE VIEW prmanager_feed_targ_adv AS
+	ORDER BY prmanager.name
+
+CREATE VIEW investor_adv AS
+	ORDER BY investor.name
+
+CREATE VIEW productmanager_mar_adv AS
+	ORDER BY productmanager.name
+
+CREATE VIEW competitor_mar AS
+	ORDER BY competitor.name
+
+CREATE VIEW component_stor_plant AS
+	ORDER BY component.name
+
+CREATE VIEW equip_cond_plant AS
+	ORDER BY equipment.name
+
+CREATE VIEW employee_equip_emp AS
+	ORDER BY equipment.name
+
+CREATE VIEW console_prot_form_groupby AS
+	AVG, MIN, MAX
+
+CREATE VIEW soft_prot_groupby AS
+	COUNT (GROUP BY software.status)
+
+CREATE VIEW kits_date AS

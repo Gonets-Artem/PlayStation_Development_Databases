@@ -1,0 +1,215 @@
+CREATE VIEW kit_sort AS
+	SELECT kit_id, name, date, psvr_id, dualshock_id
+	FROM polls_kit
+	ORDER BY date ASC;
+
+CREATE VIEW kit_full AS
+	SELECT kit_id, name, date, console_id, psvr_id, dualshock_id
+	FROM polls_kit
+	WHERE dualshock_id IS NOT NULL AND psvr_id IS NOT NULL
+	ORDER BY date ASC;
+
+CREATE VIEW kit_psvr AS
+	SELECT kit_id, name, date, console_id, psvr_id
+	FROM polls_kit
+	WHERE dualshock_id IS NULL AND psvr_id IS NOT NULL
+	ORDER BY date ASC;
+
+CREATE VIEW kit_dualshock AS
+	SELECT kit_id, name, date, console_id, dualshock_id
+	FROM polls_kit
+	WHERE dualshock_id IS NOT NULL AND psvr_id IS NULL
+	ORDER BY date ASC;
+
+CREATE VIEW kit_empty AS
+	SELECT kit_id, name, date, console_id
+	FROM polls_kit
+	WHERE dualshock_id IS NULL AND psvr_id IS NULL
+	ORDER BY date ASC;
+
+CREATE VIEW consoles_date AS
+	SELECT console_id, name, date, rom, ram, weight
+	FROM polls_console
+	ORDER BY date ASC, name ASC; 
+
+CREATE VIEW consoles_rom AS
+	SELECT console_id, name, date, rom, ram, weight
+	FROM polls_console
+	ORDER BY rom DESC, name ASC;	
+
+CREATE VIEW consoles_weight AS
+	SELECT console_id, name, date, rom, ram, weight
+	FROM polls_console
+	ORDER BY weight DESC, name ASC;		
+
+CREATE VIEW consoles_group_prot AS
+	SELECT 
+		prototype_id,
+		COUNT(console_id) AS count,
+		MIN(rom) AS min_rom,
+		MAX(rom) AS max_rom,
+		MIN(weight) AS min_weight,
+		MAX(weight) AS max_weight,
+		MIN(ram) AS min_ram,
+		MAX(ram) AS max_ram
+	FROM polls_console
+	GROUP BY prototype_id
+	ORDER BY count DESC;	
+
+CREATE VIEW software_sort AS
+	SELECT *
+	FROM polls_software
+	ORDER BY status DESC, type ASC, version DESC;	
+
+CREATE VIEW prototypes_date AS
+	SELECT prototype_id, name, date, type_storage_device, ssd_type, specifications
+	FROM polls_prototype
+	ORDER BY date ASC, name ASC;
+
+CREATE VIEW formfactor_height AS
+	SELECT form_factor_id, name, form, height, weight, depth, width
+	FROM polls_formfactor
+	ORDER BY height DESC, name ASC;
+
+CREATE VIEW formfactor_weight AS
+	SELECT form_factor_id, name, form, weight, height, depth, width
+	FROM polls_formfactor
+	ORDER BY weight DESC, name ASC;
+
+CREATE VIEW formfactor_depth AS
+	SELECT form_factor_id, name, form, depth, height, weight, width
+	FROM polls_formfactor
+	ORDER BY depth DESC, name ASC;
+
+CREATE VIEW formfactor_width AS
+	SELECT form_factor_id, name, form, width, height, weight, depth
+	FROM polls_formfactor
+	ORDER BY width DESC, name ASC;
+
+CREATE VIEW formfactor_group_form AS
+	SELECT 
+		form,
+		round(AVG(height)::DECIMAL, 1) AS avg_height,
+        	round(AVG(weight)::DECIMAL, 1) AS avg_weight,
+		round(AVG(depth)::DECIMAL, 1) AS avg_depth,
+		round(AVG(width)::DECIMAL, 1) AS avg_width
+	FROM polls_formfactor
+	GROUP BY form
+	ORDER BY avg_weight DESC;
+
+CREATE VIEW design_sort AS
+	SELECT *
+	FROM polls_design
+	ORDER BY status DESC, name ASC;
+
+CREATE VIEW prmanager_group AS
+	SELECT 
+		advertising_department_id,
+		COUNT(name) AS count
+	FROM polls_prmanager
+	GROUP BY advertising_department_id
+	ORDER BY count DESC, advertising_department_id ASC;
+
+CREATE VIEW investor_group AS
+	SELECT 
+		advertising_department_id,
+		COUNT(name) AS count
+	FROM polls_investor
+	GROUP BY advertising_department_id
+	ORDER BY count DESC, advertising_department_id ASC;
+
+CREATE VIEW productmanager_group AS
+	SELECT 
+		advertising_department_id,
+		COUNT(name) AS count
+	FROM polls_productmanager
+	GROUP BY advertising_department_id
+	ORDER BY count DESC, advertising_department_id ASC;
+
+CREATE VIEW feedback_sort AS
+	SELECT * 
+	FROM polls_feedback
+	ORDER BY evaluation DESC;
+
+CREATE VIEW marketanalysis_sort AS
+	SELECT *
+	FROM polls_marketanalysis
+	ORDER BY quality DESC, predicted_price ASC;
+
+CREATE VIEW psvr_sort AS
+	SELECT * 
+	FROM polls_psvr
+	ORDER BY permission DESC, diagonal DESC, viewing_angle DESC;
+
+CREATE VIEW psvr_sort_where AS
+	SELECT ps_vr_id, country, type_display, diagonal, viewing_angle
+	FROM polls_psvr
+	WHERE permission = '3840x2160'
+	ORDER BY diagonal DESC, viewing_angle DESC;
+
+CREATE VIEW psvr_group_having AS
+	SELECT
+	    type_display,
+	    AVG(viewing_angle) AS avg_viewing_angle
+	FROM polls_psvr
+	GROUP BY type_display
+	HAVING AVG(viewing_angle) > 105
+	ORDER BY type_display ASC;
+
+CREATE VIEW dualshock_sort_in AS
+	SELECT * 
+	FROM polls_dualshock
+	WHERE country IN ('Germany', 'Canada')
+	ORDER BY action_radius DESC, battery_power DESC;
+
+CREATE VIEW dualshock_group AS
+	SELECT 
+		compatibility,
+		MAX(weight) as max_weight,
+		MAX(action_radius) as max_action_radius,
+		MAX(battery_power) as max_battery_power			
+	FROM polls_dualshock
+	WHERE action_radius BETWEEN 4.5 AND 6.5
+	GROUP BY compatibility
+	ORDER BY max_weight DESC, max_action_radius DESC, max_battery_power DESC;
+
+CREATE VIEW storageroom_sort AS
+	SELECT *
+	FROM polls_storageroom
+	ORDER BY capacity DESC, location ASC;
+
+CREATE VIEW storageroom_group AS
+	SELECT 
+		plant_id,
+		SUM(capacity) AS general_capacity,
+		COUNT(location) AS count
+	FROM polls_storageroom
+	GROUP BY plant_id
+	ORDER BY general_capacity DESC, count DESC;
+
+CREATE VIEW component_group AS
+	SELECT 
+		storage_room_id,
+		COUNT(name) AS count
+	FROM polls_component
+	GROUP BY storage_room_id
+	ORDER BY count DESC, storage_room_id ASC;
+
+CREATE VIEW equipment_group AS
+	SELECT 
+		plant_id,
+		COUNT(name) AS count
+	FROM polls_equipment
+	GROUP BY plant_id
+	ORDER BY count DESC, plant_id ASC;
+
+CREATE VIEW equipmentcondition_group AS
+	SELECT 
+		service_ability,
+		round(AVG(noise_level)) AS avg_noise_level,
+		round(AVG(temperature)) AS avg_temperature,
+		round(AVG(wear_level)) AS avg_wear_level,
+		round(AVG(errors_number)) AS avg_errors_number
+	FROM polls_equipmentcondition
+	GROUP BY service_ability
+	ORDER BY service_ability DESC;

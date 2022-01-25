@@ -1,0 +1,9 @@
+create or replace  function delete_designer() returns trigger as $$
+begin
+    delete from polls_design_designers where designer_id=old.designer_id;
+    return old;
+end;
+    $$LANGUAGE PLPGSQL volatile;
+create trigger delete_designer before delete on polls_designer
+    for each row execute procedure
+        delete_designer();
